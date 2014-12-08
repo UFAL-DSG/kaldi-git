@@ -105,6 +105,7 @@ class NnetUpdater {
   void Backprop(CuMatrix<BaseFloat> *deriv) const;
 
   friend class NnetEnsembleTrainer;
+  friend class NnetDccaTrainer;
  private:
   // Must be called after Propagate().
   double ComputeTotAccuracy(const std::vector<NnetExample> &data) const;
