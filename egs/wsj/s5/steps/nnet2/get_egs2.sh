@@ -225,6 +225,11 @@ done
 
 nnet_context_opts="--left-context=$left_context --right-context=$right_context"
 
+uniq_opts=
+if [ -f $data/utt2uniq ]; then
+  uniq_opts="--utt2uniq=$data/utt2uniq"
+fi
+
 if [ $stage -le 2 ]; then
   echo "$0: Getting validation and training subset examples."
   rm $dir/.error 2>/dev/null
@@ -238,11 +243,11 @@ if [ $stage -le 2 ]; then
 
   all_ids=$(seq -s, $nj)  # e.g. 1,2,...39,40
   $cmd $dir/log/create_valid_subset.log \
-    nnet-get-egs $ivectors_opt $nnet_context_opts "$valid_feats" \
+    nnet-get-egs $uniq_opts $ivectors_opt $nnet_context_opts "$valid_feats" \
     "ark,s,cs:gunzip -c $dir/ali_special.gz | ali-to-pdf $alidir/final.mdl ark:- ark:- | ali-to-post ark:- ark:- |" \
      "ark:$dir/valid_all.egs" || touch $dir/.error &
   $cmd $dir/log/create_train_subset.log \
-    nnet-get-egs $ivectors_opt $nnet_context_opts "$train_subset_feats" \
+    nnet-get-egs $uniq_opts $ivectors_opt $nnet_context_opts "$train_subset_feats" \
      "ark,s,cs:gunzip -c $dir/ali_special.gz | ali-to-pdf $alidir/final.mdl ark:- ark:- | ali-to-post ark:- ark:- |" \
      "ark:$dir/train_subset_all.egs" || touch $dir/.error &
   wait;
@@ -284,7 +289,7 @@ if [ $stage -le 3 ]; then
   
   # The examples will go round-robin to egs_list.
   $cmd $io_opts JOB=1:$nj $dir/log/get_egs.JOB.log \
-    nnet-get-egs $ivectors_opt $nnet_context_opts --num-frames=$frames_per_eg "$feats" \
+    nnet-get-egs $uniq_opts $ivectors_opt $nnet_context_opts --num-frames=$frames_per_eg "$feats" \
     "ark,s,cs:gunzip -c $alidir/ali.JOB.gz | ali-to-pdf $alidir/final.mdl ark:- ark:- | ali-to-post ark:- ark:- |" ark:- \| \
     nnet-copy-egs ark:- $egs_list || exit 1;
 fi
